@@ -1,0 +1,90 @@
+import psycopg2
+
+def connect_to_db():
+    try:
+        connection = psycopg2.connect(
+            host='localhost',
+            user='postgres',
+            password='202010039',
+            database='postgres'
+        )
+        print("Conexion exitosa.")
+        return connection
+    except Exception as e:
+        print(f"Error al conectar a la base de datos: {e}")
+        return None
+
+def add_entry(cursor, nombre, carnet):
+    try:
+        cursor.execute("INSERT INTO T202010039 (nombre, carnet) VALUES (%s, %s)", (nombre, carnet))
+        print("Entrada agregada exitosamente.")
+    except Exception as e:
+        print(f"Error al agregar entrada: {e}")
+
+def delete_entry(cursor, carnet):
+    try:
+        cursor.execute("DELETE FROM T202010039 WHERE carnet = %s", (carnet,))
+        print("Entrada eliminada exitosamente.")
+    except Exception as e:
+        print(f"Error al eliminar entrada: {e}")
+
+def update_entry(cursor, carnet, new_nombre):
+    try:
+        cursor.execute("UPDATE T202010039 SET nombre = %s WHERE carnet = %s", (new_nombre, carnet))
+        print("Entrada actualizada exitosamente.")
+    except Exception as e:
+        print(f"Error al actualizar entrada: {e}")
+
+def list_entries(cursor):
+    try:
+        cursor.execute("SELECT * FROM T202010039")
+        rows = cursor.fetchall()
+        for row in rows:
+            print(row)
+    except Exception as e:
+        print(f"Error al listar entradas: {e}")
+
+def main():
+    connection = connect_to_db()
+    if connection is None:
+        return
+
+    cursor = connection.cursor()
+
+    try:
+        while True:
+            command = input("Ingrese un comando (agregar, eliminar, cambiar, listar, salir): ").strip().lower()
+            
+            if command == 'agregar':
+                nombre = input("Ingrese el nombre: ").strip()
+                carnet = input("Ingrese el carnet: ").strip()
+                add_entry(cursor, nombre, carnet)
+            
+            elif command == 'eliminar':
+                carnet = input("Ingrese el carnet a eliminar: ").strip()
+                delete_entry(cursor, carnet)
+            
+            elif command == 'cambiar':
+                carnet = input("Ingrese el carnet a actualizar: ").strip()
+                new_nombre = input("Ingrese el nuevo nombre: ").strip()
+                update_entry(cursor, carnet, new_nombre)
+            
+            elif command == 'listar':
+                list_entries(cursor)
+            
+            elif command == 'salir':
+                break
+            
+            else:
+                print("Comando no reconocido. Intente nuevamente.")
+            
+            connection.commit()  # Commit changes after each command
+    except Exception as e:
+        print(f"Error durante la ejecución: {e}")
+    finally:
+        cursor.close()
+        connection.close()
+        print("La conexion ha finalizado.")
+
+if __name__ == "__main__":
+    main()
