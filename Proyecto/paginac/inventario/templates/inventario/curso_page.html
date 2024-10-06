@@ -1,0 +1,84 @@
+{% extends "stock/base.html"%}
+
+{% load static %}
+{% block content %}
+
+    <!-- Start Banner Area -->
+    <section class="banner-area organic-breadcrumb">
+        <div class="container">
+            <div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+                <div class="col-first">
+                    <h1>Detalles de cursos</h1>
+                    <nav class="d-flex align-items-center">
+                        <a href="index.html">Home<span class="lnr lnr-arrow-right"></span></a>
+                        <a href="category.html">Catálogo<span class="lnr lnr-arrow-right"></span></a>
+                        <a href="single-product.html">Detalles del curso</a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- End Banner Area -->
+
+    <br/>
+    
+    <!-- Banner del curso -->
+    <div class="curso-banner">
+        {% if curso.banner_image %}
+            <img src="{{ curso.banner_image.url }}" alt="Banner del curso" class="img-fluid">
+        {% else %}
+            <img src="/media/default-banner.jpg" alt="Default Banner" class="img-fluid">
+        {% endif %}
+    </div>
+
+    <!-- Mensaje de bienvenida -->
+    <div class="curso-welcome">
+        <h1>Bienvenido al curso {{ curso.nombre }}</h1>
+        <p>{{ curso.welcome_message }}</p>
+    </div>
+
+    <!-- Si es catedrático, mostrar la lista de estudiantes asignados y permitir ingresar notas -->
+    {% if es_catedratico %}
+    <h2>Lista de Estudiantes Asignados</h2>
+    <form method="post">
+        {% csrf_token %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre del Estudiante</th>
+                    <th>Zona (máx 75 pts)</th>
+                    <th>Final (máx 25 pts)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for estudiante in estudiantes_asignados %}
+                <tr>
+                    <td>{{ estudiante.user.username }}</td>
+                    <td><input type="number" name="zona_{{ estudiante.id }}" value="{{ estudiante.zona }}" max="75" min="0"></td>
+                    <td><input type="number" name="final_{{ estudiante.id }}" value="{{ estudiante.final }}" max="25" min="0"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-between">
+            <!-- Botón para guardar notas -->
+            <button type="submit" class="btn btn-primary">Guardar Notas</button>
+
+            <!-- Botón para descargar notas en Excel -->
+            <a href="{% url 'exportar_notas_excel' curso.id %}" class="btn btn-secondary">Descargar Notas en Excel</a>
+        </div>
+    </form>
+    {% endif %}
+
+    <!-- Si es estudiante, mostrar imagen si la nota es mayor o igual a 61 -->
+    {% if not es_catedratico %}
+    {% for estudiante in estudiantes_asignados %}
+        {% if estudiante.user == request.user and estudiante.nota_total >= 61 %}
+        <div>
+            <img src="/media/congrats.png" alt="Felicitaciones" class="img-fluid">
+        </div>
+        {% endif %}
+    {% endfor %}
+    {% endif %}
+
+{% endblock %}

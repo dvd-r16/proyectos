@@ -1,0 +1,118 @@
+{% extends "stock/base.html"%}
+
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+	<!-- Start Banner Area -->
+	<section class="banner-area organic-breadcrumb">
+		<div class="container">
+			<div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+				<div class="col-first">
+					<h1>{{ profesor.nombre|upper }} {{ profesor.apellido|upper }}</h1>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- End Banner Area -->
+
+	<hr>
+
+	<!-- Profesor Info -->
+	<section class="vh-100">
+		<div class="container py-5 h-100">
+			<div class="row d-flex justify-content-center align-items-center h-100">
+				<div class="col col-lg-6 mb-4 mb-lg-0">
+					<div class="card mb-3" style="border-radius: .5rem;">
+						<div class="row g-0">
+							<div class="col-md-4 gradient-custom text-center text-white"
+								style="border-top-left-radius: .5rem; border-bottom-left-radius: .5rem;">
+								<!-- Verificamos si hay una imagen de perfil -->
+								{% if user.profile.profile_image %}
+									<img src="{{ user.profile.profile_image.url }}" alt="Avatar" class="img-fluid my-5" style="width: 140px;">
+								{% else %}
+									<img src="/media/default-avatar.png" alt="Avatar" class="img-fluid my-5" style="width: 140px;">
+								{% endif %}
+								<h5>{{ user.username }}</h5>
+							</div>
+							<div class="col-md-8">
+								<div class="card-body p-4">
+									<h6>Información del Profesor</h6>
+									<hr class="mt-0 mb-4">
+									<div class="row pt-1">
+										<div class="col-6 mb-3">
+											<h6>Nombres</h6>
+											<p class="text-muted">{{ profesor.nombre }}</p>
+										</div>
+										<div class="col-6 mb-3">
+											<h6>Apellidos</h6>
+											<p class="text-muted">{{ profesor.apellido }}</p>
+										</div>
+									</div>
+									<div class="row pt-1">
+										<div class="col-6 mb-3">
+											<h6>DPI</h6>
+											<p class="text-muted">{{ profesor.dpi }}</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Resumen de Cursos Asignados -->
+	<br>
+	<div class="col text-center">
+		<h1 style="color: #ffffff; text-align: center; margin-bottom: 30px;">Resumen de Cursos a Impartir</h1>
+		<a class="primary-btn center" href="{% url 'perfil_pdf' %}">Descargar resumen de cursos en PDF</a>
+	</div>
+
+	<section class="cart_area">
+		<div class="container">
+			<div class="cart_inner">
+				<div class="table-responsive">
+					<table class="table">
+						<thead>
+							<tr>
+								<th scope="col">ID Curso</th>
+								<th scope="col">Nombre del Curso</th>
+								<th scope="col">Horario</th>
+								<th scope="col">Carrera</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for curso in cursos_a_impartir %}
+							<tr>
+								<td>
+									<h5>{{ curso.id }}</h5>
+								</td>
+								<td>
+									<h5><a href="{% url 'curso_page' curso.id %}">{{ curso.nombre }}</a></h5>
+								</td>
+								<td>
+									<h5>{{ curso.horario }}</h5>
+								</td>
+								<td>
+									<h5>{{ curso.categoria }}</h5>
+								</td>
+							</tr>
+							{% empty %}
+							<tr>
+								<td colspan="4">
+									<h5 class="text-center">No hay cursos asignados.</h5>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</section>
+
+{% endblock %}

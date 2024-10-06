@@ -1,0 +1,49 @@
+{% extends "stock/base.html"%}
+
+{% load static %}
+{% block content %}
+    <!-- Start Banner Area -->
+	<section class="banner-area organic-breadcrumb">
+		<div class="container">
+			<div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+				<div class="col-first">
+					<h1 style= "color:rgb(0, 0, 0);">Contacto</h1>
+					<nav class="d-flex align-items-center">
+						<a href="{% url 'Home' %}" style= "color:rgb(0, 0, 0);">Home<span class="lnr lnr-arrow-right"></span></a>
+						<a href="{% url 'Contacto' %}" style= "color:rgb(0, 0, 0);">Contacto</a>
+					</nav>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- End Banner Area -->
+	<hr>
+
+	<!--================Contact Area =================-->
+	<section class="contact_area section_gap_bottom">
+		<div class="container" style="background-color:rgb(27, 27, 27);">
+			<div class="row justify-content-center">
+					<div class="contact_info">
+						<div class="info_item">
+							<i class="lnr lnr-home" style= "color:rgb(255, 255, 255);"></i>
+							<h6 style="color: #ffffff">Ciudad de Guatemala</h6>
+							<p>Universidad de San Carlos de Guatemala, zona 12, Facultad de Ingeniería</p>
+						</div>
+						<div class="info_item">
+							<i class="lnr lnr-phone-handset" style= "color:rgb(255, 255, 255);"></i>
+							<h6><a href="#">2437-1708</a></h6>
+							<p>Horario de Atención: 8:00 - 16:00 Hrs</p>
+						</div>
+						<div class="info_item">
+							<i class="lnr lnr-envelope" style= "color:rgb(255, 255, 255);"></i>
+							<h6><a href="#">fiusac@ingenieria.usac.com.gt</a></h6>
+							<p>Disponible las 24h</p>
+						</div>
+					</div>
+			</div>
+		</div>
+	</section>
+	<!--================Contact Area =================-->
+	<hr>
+
+{% endblock %}

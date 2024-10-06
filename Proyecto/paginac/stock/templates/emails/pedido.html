@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zxx" class="no-js">
+
+<head>
+<!-- CSS only -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+</head>
+
+<body class="Bodyss">
+
+    <table style="max-width: 1000px; padding:10px; margin:0 auto; border-collapse: collapse;">
+        <!--<tr>
+            <td style="background-color: #ecf0f1; text-align: left ; padding: 0">
+                <a href="#">
+                    <img width="20%" style="display: block; margin:1.5% 3%" src="https://i.postimg.cc/FzYtkydh/common-banner2.png">
+                </a>
+            </td>
+        </tr>-->
+        <tr>
+            <td style="padding: 0;">
+                <img style="padding: 0; display:block" src="https://i.postimg.cc/TwnLC1gd/1.jpg" width="100%" class="img-fluid" alt="Responsive image">
+            </td>
+        </tr>
+        <tr>
+            <td style="background-color: #04333f">
+                <div style="color: #6ba8e4; margin:4% 10% 2%; text-align: justify; font-family: sans-serif">
+                    <h2 style="color: #e07212; margin: 0 0 7px">Gracias por tu asignacion</h2>
+                    <p class="lead">
+                        Hola {{nombreusuario}}.<br/>
+                        Gracias por asignarte los mejores cursos. A continuacion encontraras el detalle:<br/>
+                        <br/>
+                        <strong>No. de Factura: </strong>{{pedido.id}}<br/>
+                        <br/>
+                        <strong>Cursos:</strong>
+                        <br/>
+                        {% for lineas_pedido in lineas_pedido %}
+                            {{lineas_pedido.producto}}
+                            {{lineas_pedido.cantidad}}
+                            <br/>
+                        {% endfor %}
+                    </p>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 0;">
+                <img style="padding: 0; display:block" src="https://i.postimg.cc/qqLtHF1W/2.jpg" width="100%" class="img-fluid" alt="Responsive image">
+            </td>
+        </tr>
+    </table>
+
+</body>
+
+
+</html>
