@@ -11,6 +11,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from django.conf import settings
 from django.http import HttpResponse
+from django.http import JsonResponse
 # Create your views here.
 
 def catalogo(request):
@@ -206,3 +207,11 @@ def bebe_consulta(request):
 
     # Si no es una solicitud POST, simplemente renderiza la plantilla del formulario.
     return render(request, 'stock/bebe_consulta.html')
+
+def marcar_completada(request, reserva_id):
+    reserva = get_object_or_404(Reserva, id=reserva_id)
+    
+    if request.method == 'POST':
+        reserva.completada = not reserva.completada  # Alternar entre True y False
+        reserva.save()
+        return redirect('perfil')  # Redirige al perfil después de marcar como completada o no completada

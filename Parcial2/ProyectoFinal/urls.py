@@ -24,6 +24,7 @@ urlpatterns = [
     path('carro/', include('carro.urls')),
     path('pedidos/', include('pedidos.urls')),
     path('autenticacion/', include('autenticacion.urls')),
+    path('captcha/', include('captcha.urls')),
     path('', include('stock.urls')),
 
     path('reconocimiento/', include('reconocimiento.urls')),

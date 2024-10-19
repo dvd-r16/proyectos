@@ -9,21 +9,14 @@ class articulos(models.Model):
     nombre = models.CharField(max_length=30, null=False)
     categoria = models.CharField(max_length=30, null=False)
     precio = models.FloatField(null=False)
-    horario = models.CharField(max_length=100)
     descuento = models.FloatField(null=False)
     descripcion = models.CharField(max_length=150)
     imagen = models.ImageField(upload_to='servicios')
     cantidad = models.IntegerField(null=False, default= 0)
     catedratico = models.ForeignKey(Profesor, on_delete=models.CASCADE)
-    estudiantes = models.ManyToManyField(User, related_name='cursos_inscritos', blank=True)  # Relación con los estudiantes
     disponibilidad = models.BooleanField()
-    imagen_certificado = models.ImageField(upload_to='certificados/', blank=True, null=True, help_text='Imagen de fondo para el certificado.')
     creacion = models.DateTimeField(auto_now_add=True)
     update = models.DateTimeField(auto_now_add=True)
-
-    #Para las paginas de cada curso
-    banner_image = models.ImageField(upload_to='banners', null=True, blank=True)
-    welcome_message = models.TextField(null=True, blank=True)
 
     class Meta:
         verbose_name= 'articulo'
@@ -79,6 +72,7 @@ class Reserva(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     notas_profesor = models.TextField(blank=True, null=True)
     archivo = models.FileField(upload_to='archivos_reservas/', blank=True, null=True)
+    completada = models.BooleanField(default=False)  # Nuevo campo para indicar si la consulta fue hecha
     
     class Meta:
         db_table = 'reserva_consultas'

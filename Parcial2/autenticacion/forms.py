@@ -1,4 +1,5 @@
 from django import forms  
+from captcha.fields import CaptchaField
 from django.contrib.auth.models import User  
 from django.contrib.auth.forms import UserCreationForm  
 from django.core.exceptions import ValidationError  
@@ -15,6 +16,7 @@ class CustomUserCreationForm(UserCreationForm):
     phone = forms.CharField(label='Teléfono', max_length=20, help_text='Número de teléfono de contacto.')
     email = forms.EmailField(label='Correo electrónico', help_text='Dirección de correo electrónico.')
     profile_image = forms.ImageField(label='Foto de perfil', required=False)
+    captcha = CaptchaField()  # Add this line for CAPTCHA
 
     class Meta:
         model = User

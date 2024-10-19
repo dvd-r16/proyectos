@@ -106,7 +106,7 @@ def perfil(request):
     if hasattr(user, 'profesor'):
         # Si el usuario es un profesor, obtener los cursos que imparte
         profesor = Profesor.objects.get(user=user)
-        reservas = Reserva.objects.filter(profesor=profesor) 
+        reservas = Reserva.objects.filter(profesor=profesor).order_by('-fecha_reserva')  # Orden descendente por fecha
         context = {
             "user": user,
             "profesor": profesor,  # Información del profesor
@@ -190,7 +190,7 @@ def lockout(request, credentials, *args, **kwargs):
 # Función para enviar correo de restablecimiento de contraseña
 def enviar_mail(**kwargs):
 
-    asunto = "Restablecimiento Contraseña en Kaori Shop"
+    asunto = "[ATENCIÓN] Mensaje de Sonrisas de la Vida"
     mensaje = render_to_string("emails/reset_pass.html", {
         "nombreusuario": kwargs.get("nombreusuario")
     })
@@ -292,3 +292,96 @@ def bebe_consulta_view(request):
         'doctor': Profesor.objects.first(),
     }
     return render(request, 'registro/bebe_consulta.html', context)
+
+import cv2
+import numpy as np
+import base64
+from django.shortcuts import render, redirect
+from django.contrib.auth import login
+from usuarios.models import usuarios
+from usuarios.models import Profesor  # Asegúrate de importar el modelo de Profesor
+import face_recognition  # Biblioteca de reconocimiento facial
+
+import cv2
+import numpy as np
+import base64
+from django.shortcuts import render, redirect
+from django.contrib.auth import login
+from usuarios.models import usuarios
+from usuarios.models import Profesor  # Asegúrate de importar el modelo de Profesor
+import face_recognition  # Biblioteca de reconocimiento facial
+
+def facial_login(request):
+    if request.method == "POST":
+        # Obtener la imagen enviada desde el formulario
+        image_data = request.POST.get('image_data')
+        if image_data:
+            # Decodificar la imagen en base64
+            format, imgstr = image_data.split(';base64,') 
+            img_bytes = base64.b64decode(imgstr)
+            img_np_arr = np.frombuffer(img_bytes, np.uint8)
+            frame = cv2.imdecode(img_np_arr, cv2.IMREAD_COLOR)
+
+            # Cargar la imagen capturada y obtener su encoding
+            captured_image_encoding = face_recognition.face_encodings(frame)
+            if not captured_image_encoding:
+                return render(request, 'error.html', {'message': 'No se encontraron características faciales en la imagen capturada.'})
+
+            # --- Paso 1: Verificar en las imágenes de los usuarios ---
+            user_found = False  # Flag para verificar si se encontró un usuario
+
+            try:
+                username = request.user.username
+                users = usuarios.objects.filter(username=username)
+
+                if users.exists():
+                    for user in users:
+                        if not user.profile_image or not user.profile_image.path:
+                            continue
+
+                        profile_image = face_recognition.load_image_file(user.profile_image.path)
+                        profile_encoding = face_recognition.face_encodings(profile_image)
+
+                        if not profile_encoding:
+                            continue
+
+                        results = face_recognition.compare_faces([profile_encoding[0]], captured_image_encoding[0])
+
+                        if results[0]:
+                            login(request, user.user, backend='django.contrib.auth.backends.ModelBackend')
+                            user_found = True  # Se encontró un usuario
+                            return redirect('Home')  # Redirigir al inicio si hay coincidencia en el Paso 1
+
+            except Exception as e:
+                print(f"Error en el paso 1: {str(e)}")
+                return render(request, 'error.html', {'message': f'Ocurrió un error al intentar acceder al perfil del usuario: {str(e)}'})
+
+            # --- Paso 2: Verificar en las imágenes de los profesores ---
+            if not user_found:  # Solo verificar los profesores si no se encontró un usuario en el paso 1
+                print("Entrando al paso 2: Verificar imágenes de los profesores")  # Asegurar que llegamos aquí
+                try:
+                    for profesor in Profesor.objects.all():
+                        print(f"Verificando profesor: {profesor}")
+                        if not profesor.foto_perfil or not profesor.foto_perfil.path:
+                            print("Sin foto de perfil, continuando...")
+                            continue
+
+                        profesor_image = face_recognition.load_image_file(profesor.foto_perfil.path)
+                        profesor_encoding = face_recognition.face_encodings(profesor_image)
+
+                        if not profesor_encoding:
+                            print("No se encontró un encoding, continuando...")
+                            continue
+
+                        results = face_recognition.compare_faces([profesor_encoding[0]], captured_image_encoding[0])
+
+                        if results[0]:
+                            print("Coincidencia encontrada, haciendo login como profesor")
+                            login(request, profesor.user, backend='django.contrib.auth.backends.ModelBackend')
+                            return redirect('Home')  # Redirige a la página principal
+
+                except Exception as e:
+                    print(f"Error en el paso 2: {str(e)}")
+                    return render(request, 'error.html', {'message': f'Error al verificar imágenes de los profesores: {str(e)}'})
+
+    return render(request, 'facial_login.html')

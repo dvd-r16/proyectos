@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'autenticacion',
     'pedidos',
     'reconocimiento',
+    'captcha',
     # 'user',
     'usuarios',
     # Librerias

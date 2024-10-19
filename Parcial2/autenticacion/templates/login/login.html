@@ -35,11 +35,10 @@
             </div>	
 
         </form>
-
-		<div class="col text-center" style="margin-top: 10px;">
-			<a href="{% url 'admin:index' %}" class="btn btn-primary">Iniciar Sesión con Reconocimiento Facial</a>
-		</div>
-
     </div>
 	<hr/>
+
+	<div class="col text-center mt-3">
+		<a href="{% url 'facial_login' %}" class="btn btn-primary">Iniciar sesión mediante reconocimiento facial</a>
+	</div>
 {% endblock %}
