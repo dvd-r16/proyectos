@@ -7,7 +7,7 @@ from unidecode import unidecode  # Importamos la librería para eliminar tildes
 conn = psycopg2.connect(
     dbname="detector",
     user="postgres",
-    password="Dali6478",
+    password="202010039",
     host="localhost",
     port="5432"
 )
@@ -20,7 +20,6 @@ def save_to_history(data):
 
 # Funciones para el detector
 def is_palindrome(sentence):
-    # Normalizar la oración: eliminar caracteres no alfabéticos, convertir a minúsculas y eliminar tildes
     normalized = re.sub(r'[^a-zA-Z]', '', unidecode(sentence).lower())
     return normalized == normalized[::-1]
 
@@ -36,7 +35,7 @@ def is_perfect(number):
     return number > 1 and sum(i for i in range(1, number) if number % i == 0) == number
 
 # Función principal del menú del detector
-def detector_menu():
+def detector_menu(user):
     while True:
         print("\n1) Detector de palíndromos\n2) Detector de números primos\n3) Detector de números perfectos")
         option = input("Selecciona una opción: ")
@@ -48,11 +47,12 @@ def detector_menu():
                 continue
 
             result = "SI" if is_palindrome(sentence) else "NO"
-            cursor.execute("INSERT INTO detect (palindromos, resultado) VALUES (%s, %s)", (sentence, result))
+            cursor.execute("INSERT INTO detector (usuario, palindromos, resultado) VALUES (%s, %s, %s)", 
+                           (user, sentence, result))
             conn.commit()
             message = f"La oración {'SI' if result == 'SI' else 'NO'} es palíndroma"
             print(message)
-            save_to_history(f"{datetime.now()} - Palíndromo: {sentence} - Resultado: {result}")
+            save_to_history(f"{datetime.now()} - Usuario: {user} - Palíndromo: {sentence} - Resultado: {result}")
 
         elif option == '2':
             try:
@@ -61,12 +61,13 @@ def detector_menu():
                 print("Error: Solo se permiten números.")
                 continue
 
-            result = "SI" if is_prime(number) else "NO"
-            cursor.execute("INSERT INTO detect (numero, resultado) VALUES (%s, %s)", (number, result))
+            result = "SI ES PRIMO" if is_prime(number) else "NO ES PRIMO"
+            cursor.execute("INSERT INTO detector (usuario, numero, resultado) VALUES (%s, %s, %s)", 
+                           (user, number, result))
             conn.commit()
-            message = f"El número {'SI' if result == 'SI' else 'NO'} es primo"
+            message = f"El número {result}"
             print(message)
-            save_to_history(f"{datetime.now()} - Número primo: {number} - Resultado: {result}")
+            save_to_history(f"{datetime.now()} - Usuario: {user} - Número primo: {number} - Resultado: {result}")
 
         elif option == '3':
             try:
@@ -75,34 +76,34 @@ def detector_menu():
                 print("Error: Solo se permiten números.")
                 continue
 
-            result = "SI" if is_perfect(number) else "NO"
-            cursor.execute("INSERT INTO detect (numero, resultado) VALUES (%s, %s)", (number, result))
+            result = "SI ES PERFECTO" if is_perfect(number) else "NO ES PERFECTO"
+            cursor.execute("INSERT INTO detector (usuario, numero, resultado) VALUES (%s, %s, %s)", 
+                           (user, number, result))
             conn.commit()
-            message = f"El número {'SI' if result == 'SI' else 'NO'} es perfecto"
+            message = f"El número {result}"
             print(message)
-            save_to_history(f"{datetime.now()} - Número perfecto: {number} - Resultado: {result}")
+            save_to_history(f"{datetime.now()} - Usuario: {user} - Número perfecto: {number} - Resultado: {result}")
 
         else:
             print("Opción inválida. Inténtalo de nuevo.")
             continue
 
         again = input("¿Deseas realizar otra operación? (s/n): ").lower()
-        if again == 's':
-            # Si el usuario elige 's', reiniciar el programa pidiendo el nombre de usuario
-            return False  # Esto vuelve al menú principal
-
-        elif again == 'n':
-            # Si el usuario elige 'n', cerrar la conexión y salir
-            cursor.close()
-            conn.close()  # Cerramos la conexión antes de salir.
-            print("Saliendo del programa...")
-            return True  # Detiene el programa
+        if again == 'n':
+            return  # Salir del detector_menu y regresar a main_menu
 
 # Menú principal
 def main_menu():
     while True:
-        user = input("Ingresa tu nombre de usuario: ")
-        cursor.execute("INSERT INTO detect (usuario) VALUES (%s)", (user,))
+        user = input("Ingresa tu nombre de usuario: ").strip()
+        while not user:  # Verificar si el usuario ingresó un nombre en blanco
+            print("Debe ingresar un nombre de usuario válido.")
+            user = input("Ingresa tu nombre de usuario: ").strip()
+        
+        user = f"{user} - Python"  # Agregar el identificador "- Python" al usuario
+        # Insertar inicio de sesión con "////////////" en columnas `palindromos` y `resultado`, y NULL en `numero`
+        cursor.execute("INSERT INTO detector (usuario, palindromos, numero, resultado) VALUES (%s, %s, %s, %s)", 
+                       (user, "////////////", None, "////////////"))
         conn.commit()
 
         while True:
@@ -110,23 +111,23 @@ def main_menu():
             option = input("Selecciona una opción: ")
 
             if option == '1':
-                if not detector_menu():  # Si el detector retorna False, se detiene la ejecución.
-                    break  # Si el detector devuelve True, es que se terminó el proceso.
+                detector_menu(user)  # Llamar al detector_menu sin volver a pedir el nombre de usuario
             elif option == '2':
-                cursor.execute("SELECT * FROM detect")
+                cursor.execute("SELECT * FROM detector WHERE usuario = %s", (user,))
                 records = cursor.fetchall()
                 for record in records:
                     print(record)
             elif option == '3':
-                user_to_delete = input("Ingresa el nombre de usuario cuyos datos deseas borrar: ")
-                cursor.execute("DELETE FROM detect WHERE usuario = %s", (user_to_delete,))
+                user_to_delete = input("Ingresa el nombre de usuario cuyos datos deseas borrar: ").strip()
+                user_to_delete = f"{user_to_delete} - Python"  # Agregar "- Python" al nombre del usuario
+                cursor.execute("DELETE FROM detector WHERE usuario = %s", (user_to_delete,))
                 conn.commit()
                 print(f"Datos de {user_to_delete} eliminados.")
             elif option == '4':
                 print("Saliendo del programa...")
                 cursor.close()
-                conn.close()  # Cerramos la conexión antes de salir.
-                return  # Detenemos el programa al seleccionar la opción de salir.
+                conn.close()  # Cerrar la conexión antes de salir
+                return  # Detener el programa al seleccionar la opción de salir
             else:
                 print("Opción inválida. Inténtalo de nuevo.")
 

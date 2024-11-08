@@ -1,13 +1,22 @@
-pkg load database;  # Cargar el paquete necesario para trabajar con bases de datos
+pkg load database;  % Cargar el paquete necesario para trabajar con bases de datos
 
 function conn = conectar_db()
     try
-        conn = pq_connect(setdbopts('dbname', 'detect', 'host', 'localhost', 'port', '5432', 'user', 'postgres', 'password', 'Dali6478'));
+        conn = pq_connect(setdbopts("dbname", "detector", "host", "localhost", "port", "5432", "user", "postgres", "password", "202010039"));
+        disp("Conexión a la base de datos establecida exitosamente.");
     catch
-        disp("Error al conectar a la base de datos");
-        return;
+        disp("Error al conectar a la base de datos.");
+        conn = []; % Retornar una conexión vacía en caso de error
     end
 end
+
+% Función para agregar el delimitador solo en la base de datos
+function add_delimiter(conn, user)
+    % Agregar delimitador en la base de datos con el formato completo del usuario
+    user_with_octave = strcat(user, " - Octave");
+    query = sprintf("INSERT INTO detector (usuario, palindromos, resultado) VALUES ('%s', '////////////', '////////////')", user_with_octave);
+    pq_exec_params(conn, query, {});
+endfunction
 
 % Función para almacenar en el archivo .txt
 function save_to_history(data)
@@ -18,9 +27,18 @@ endfunction
 
 % Función para verificar si una palabra es palíndroma
 function result = is_palindrome(sentence)
-    normalized = lower(strrep(sentence, ' ', ''));
-    normalized = unideblank(normalized);  % Elimina tildes
-    result = strcmp(normalized, fliplr(normalized));  % Compara si es igual al reverso
+    % Normalizar la oración: eliminar espacios, convertir a minúsculas y reemplazar caracteres acentuados
+    sentence = lower(sentence);
+    sentence = regexprep(sentence, '[^a-z]', '');  % Eliminar todo excepto letras de la a a la z
+    sentence = strrep(sentence, 'á', 'a');
+    sentence = strrep(sentence, 'é', 'e');
+    sentence = strrep(sentence, 'í', 'i');
+    sentence = strrep(sentence, 'ó', 'o');
+    sentence = strrep(sentence, 'ú', 'u');
+    sentence = strrep(sentence, 'ñ', 'n');
+    
+    % Comparar si es igual al reverso
+    result = strcmp(sentence, fliplr(sentence));
 endfunction
 
 % Función para verificar si un número es primo
@@ -49,7 +67,8 @@ function result = is_perfect(number)
 endfunction
 
 % Función principal del menú del detector
-function detector_menu()
+function detector_menu(conn, user)
+    user = strcat(user, " - Octave");  % Agregar el identificador "- Octave" al usuario
     while true
         printf("\n1) Detector de palíndromos\n2) Detector de números primos\n3) Detector de números perfectos\n");
         option = input("Selecciona una opción: ", "s");
@@ -65,11 +84,12 @@ function detector_menu()
             if result
                 result_str = 'SI';
             endif
-            query = sprintf("INSERT INTO detect (palindromos, resultado) VALUES ('%s', '%s')", sentence, result_str);
+            query = sprintf("INSERT INTO detector (usuario, palindromos, resultado) VALUES ('%s', '%s', '%s')", user, sentence, result_str);
+            pq_exec_params(conn, query, {});
 
             message = sprintf("La oración %s es palíndroma", result_str);
             printf("%s\n", message);
-            save_to_history(sprintf("%s - Palíndromo: %s - Resultado: %s", datestr(now, 'yyyy-mm-dd HH:MM:SS'), sentence, result_str));
+            save_to_history(sprintf("%s - Usuario: %s - Palíndromo: %s - Resultado: %s", datestr(now, 'yyyy-mm-dd HH:MM:SS'), user, sentence, result_str));
 
         elseif option == '2'
             number = input("Ingresa un número: ");
@@ -78,15 +98,17 @@ function detector_menu()
                 continue;
             endif
             result = is_prime(number);
-            result_str = 'NO';
             if result
-                result_str = 'SI';
+                result_str = 'SI ES PRIMO';
+            else
+                result_str = 'NO ES PRIMO';
             endif
-            query = sprintf("INSERT INTO detect (numero, resultado) VALUES (%d, '%s')", number, result_str);
+            query = sprintf("INSERT INTO detector (usuario, numero, resultado) VALUES ('%s', %d, '%s')", user, number, result_str);
+            pq_exec_params(conn, query, {});
 
-            message = sprintf("El número %s es primo", result_str);
+            message = sprintf("El número %s", result_str);
             printf("%s\n", message);
-            save_to_history(sprintf("%s - Número primo: %d - Resultado: %s", datestr(now, 'yyyy-mm-dd HH:MM:SS'), number, result_str));
+            save_to_history(sprintf("%s - Usuario: %s - Número primo: %d - Resultado: %s", datestr(now, 'yyyy-mm-dd HH:MM:SS'), user, number, result_str));
 
         elseif option == '3'
             number = input("Ingresa un número: ");
@@ -95,15 +117,17 @@ function detector_menu()
                 continue;
             endif
             result = is_perfect(number);
-            result_str = 'NO';
             if result
-                result_str = 'SI';
+                result_str = 'SI ES PERFECTO';
+            else
+                result_str = 'NO ES PERFECTO';
             endif
-            query = sprintf("INSERT INTO detect (numero, resultado) VALUES (%d, '%s')", number, result_str);
-            pq_exec(conn, query);
-            message = sprintf("El número %s es perfecto", result_str);
+            query = sprintf("INSERT INTO detector (usuario, numero, resultado) VALUES ('%s', %d, '%s')", user, number, result_str);
+            pq_exec_params(conn, query, {});
+
+            message = sprintf("El número %s", result_str);
             printf("%s\n", message);
-            save_to_history(sprintf("%s - Número perfecto: %d - Resultado: %s", datestr(now, 'yyyy-mm-dd HH:MM:SS'), number, result_str));
+            save_to_history(sprintf("%s - Usuario: %s - Número perfecto: %d - Resultado: %s", datestr(now, 'yyyy-mm-dd HH:MM:SS'), user, number, result_str));
 
         else
             printf("Opción inválida. Inténtalo de nuevo.\n");
@@ -111,10 +135,7 @@ function detector_menu()
         endif
 
         again = input("¿Deseas realizar otra operación? (s/n): ", "s");
-        if again == 's'
-            return;  % Si el usuario elige 's', reiniciar el programa
-        elseif again == 'n'
-
+        if strcmp(again, 'n')
             printf("Saliendo del programa...\n");
             return;  % Detener el programa
         endif
@@ -123,24 +144,36 @@ endfunction
 
 % Menú principal
 function main_menu()
+    conn = conectar_db();  % Conectar a la base de datos al inicio
+
     while true
         user = input("Ingresa tu nombre de usuario: ", "s");
-        query = sprintf("INSERT INTO detect (usuario) VALUES ('%s')", user);
+        % Verificar si el usuario ingresó un nombre en blanco
+        while isempty(user)
+            printf("Debe ingresar un nombre de usuario válido.\n");
+            user = input("Ingresa tu nombre de usuario: ", "s");
+        endwhile
 
+        % Agregar delimitador para el nuevo usuario solo en la base de datos con formato "usuario - Octave"
+        add_delimiter(conn, user);
+
+        % Continuar con el usuario en formato "usuario - Octave" en todas las consultas
+        user_octave = strcat(user, " - Octave");
 
         while true
             printf("\n1) Detector\n2) Historial de datos ingresados\n3) Borrar datos\n4) Salir\n");
             option = input("Selecciona una opción: ", "s");
 
             if option == '1'
-                detector_menu();
+                detector_menu(conn, user);
             elseif option == '2'
-                result = pq_exec(conn, "SELECT * FROM detect");
+                result = pq_exec_params(conn, "SELECT * FROM detector WHERE usuario = $1", {user_octave});
                 disp(result);
             elseif option == '3'
                 user_to_delete = input("Ingresa el nombre de usuario cuyos datos deseas borrar: ", "s");
-                query = sprintf("DELETE FROM detect WHERE usuario = '%s'", user_to_delete);
-
+                user_to_delete = strcat(user_to_delete, " - Octave");  % Agregar "- Octave" al nombre del usuario al borrar
+                query = sprintf("DELETE FROM detector WHERE usuario = '%s'", user_to_delete);
+                pq_exec_params(conn, query, {});
                 printf("Datos de %s eliminados.\n", user_to_delete);
             elseif option == '4'
                 pq_close(conn);  % Cerrar la conexión
@@ -153,8 +186,5 @@ function main_menu()
     endwhile
 endfunction
 
-
 % Ejecución del programa
 main_menu();
-
-
